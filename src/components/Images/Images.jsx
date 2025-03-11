@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ImageInput from "./ImageInput.jsx";
 import ImageDisplay from "./ImageDisplay.jsx";
+import {Box, Button} from "@mui/material";
+import {downloadZippedImages} from "./downloadZippedImages.js";
 
 function Images() {
     const [images, setImages] = useState([]);
@@ -11,11 +13,15 @@ function Images() {
     };
 
     return (
-        <div>
-            <h2>Image Capture and Display (ImageData version)</h2>
+        <Box sx={{display:'flex', flexDirection:'column', alignItems:'center', gap:2}}>
             <ImageInput addImage={addImage} />
             <ImageDisplay images={images} />
-        </div>
+
+            <Box>
+            <Button sx={{mr:2}} variant="outlined" onClick={() => setImages([])}>Clear Images</Button>
+            <Button variant="contained" onClick={() => downloadZippedImages(images)}>Download images</Button>
+            </Box>
+        </Box>
     );
 }
 

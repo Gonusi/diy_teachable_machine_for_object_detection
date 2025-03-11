@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from "react";
 import {VIDEO_HEIGHT, VIDEO_WIDTH} from "./constants";
+import {Box, Button} from "@mui/material";
 
 function ImageInput({ addImage }) {
     // Desired capture dimensions:
@@ -91,18 +92,18 @@ function ImageInput({ addImage }) {
     };
 
     return (
-    <Box>
+    <Box sx={{border:'1px solid grey', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 2}}>
                 {/* The video feed is styled to "cover" its container so that it is cropped (not squished) */}
                 <video
                     ref={videoRef}
                     autoPlay
                     muted
-                    style={{ objectFit: 'cover', width: VIDEO_WIDTH / 4, height: VIDEO_HEIGHT / 4 }}
+                    style={{ objectFit: 'cover', width: VIDEO_WIDTH / 3, height: VIDEO_HEIGHT / 3 }}
                 />
 
-            <button onClick={() => (capturing ? stopCapture() : startCapture())}>
+            <Button sx={{mt: 2}} variant="contained" onClick={() => (capturing ? stopCapture() : startCapture())}>
                 {capturing ? "Stop" : "Capture"}
-            </button>
+            </Button>
     </Box>
     );
 }
