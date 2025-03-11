@@ -1,11 +1,9 @@
-import React, {useEffect, useRef, useState} from "react";
-import {VIDEO_HEIGHT, VIDEO_WIDTH} from "./constants";
-import {Box, Button} from "@mui/material";
+import React, { useEffect, useRef } from "react";
+import {CAPTURE_INTERVAL_MS, VIDEO_HEIGHT, VIDEO_WIDTH} from "./constants";
+import { Box, Button } from "@mui/material";
 
 function ImageInput({ addImage }) {
-    // Desired capture dimensions:
     const videoRef = useRef(null);
-    const [capturing, setCapturing] = useState(false);
     const intervalRef = useRef(null);
 
     useEffect(() => {
@@ -39,10 +37,10 @@ function ImageInput({ addImage }) {
         const video = videoRef.current;
         if (!video) return;
 
-        const canvas = document.createElement('canvas');
+        const canvas = document.createElement("canvas");
         canvas.width = VIDEO_WIDTH;
         canvas.height = VIDEO_HEIGHT;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext("2d");
 
         const videoWidth = video.videoWidth;
         const videoHeight = video.videoHeight;
@@ -54,19 +52,16 @@ function ImageInput({ addImage }) {
 
         // Determine crop parameters to maintain the 1280x800 (16:10) ratio.
         if (videoRatio > desiredRatio) {
-            // Video is too wide: crop horizontally.
             sHeight = videoHeight;
             sWidth = videoHeight * desiredRatio;
             sx = (videoWidth - sWidth) / 2;
             sy = 0;
         } else if (videoRatio < desiredRatio) {
-            // Video is too tall: crop vertically.
             sWidth = videoWidth;
             sHeight = videoWidth / desiredRatio;
             sx = 0;
             sy = (videoHeight - sHeight) / 2;
         } else {
-            // Aspect ratios match; no cropping needed.
             sx = 0;
             sy = 0;
             sWidth = videoWidth;
@@ -81,30 +76,41 @@ function ImageInput({ addImage }) {
     };
 
     const startCapture = () => {
-        setCapturing(true);
-        // Capture a frame every 50ms (this interval is configurable)
-        intervalRef.current = setInterval(captureFrame, 50);
+        // Capture a frame every 50ms while the button is held down.
+        if (!intervalRef.current) {
+            intervalRef.current = setInterval(captureFrame, CAPTURE_INTERVAL_MS);
+        }
     };
 
     const stopCapture = () => {
-        setCapturing(false);
         clearInterval(intervalRef.current);
+        intervalRef.current = null;
     };
 
     return (
-    <Box sx={{border:'1px solid grey', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 2}}>
-                {/* The video feed is styled to "cover" its container so that it is cropped (not squished) */}
-                <video
-                    ref={videoRef}
-                    autoPlay
-                    muted
-                    style={{ objectFit: 'cover', width: VIDEO_WIDTH / 3, height: VIDEO_HEIGHT / 3 }}
-                />
-
-            <Button sx={{mt: 2}} variant="contained" onClick={() => (capturing ? stopCapture() : startCapture())}>
-                {capturing ? "Stop" : "Capture"}
-            </Button>
-    </Box>
+        <Box sx={{ border: "1px solid grey", display: "flex", flexDirection: "column", alignItems: "center", padding: 2 }}>
+            <video
+                ref={videoRef}
+                autoPlay
+                muted
+                style={{ objectFit: "cover", width: VIDEO_WIDTH / 3, height: VIDEO_HEIGHT / 3 }}
+            />
+            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                <Button
+                    variant="contained"
+                    onMouseDown={startCapture}
+                    onMouseUp={stopCapture}
+                    onMouseLeave={stopCapture}
+                    onTouchStart={startCapture}
+                    onTouchEnd={stopCapture}
+                >
+                    Hold to Capture
+                </Button>
+                <Button variant="contained" onClick={captureFrame}>
+                    Capture Single Frame
+                </Button>
+            </Box>
+        </Box>
     );
 }
 
