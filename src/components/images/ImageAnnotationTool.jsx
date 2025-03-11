@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { VIDEO_WIDTH, VIDEO_HEIGHT } from './constants';
+import { VIDEO_WIDTH, VIDEO_HEIGHT } from '../images/constants.js' //
 
 const CONTROL_RADIUS = 10; // Radius for control point circles
 
