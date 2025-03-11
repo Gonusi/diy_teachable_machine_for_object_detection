@@ -1,9 +1,8 @@
 import React, {useEffect, useRef, useState} from "react";
+import {VIDEO_HEIGHT, VIDEO_WIDTH} from "./constants";
 
 function ImageInput({ addImage }) {
     // Desired capture dimensions:
-    const desiredWidth = 1280;
-    const desiredHeight = 800;
     const videoRef = useRef(null);
     const [capturing, setCapturing] = useState(false);
     const intervalRef = useRef(null);
@@ -40,15 +39,15 @@ function ImageInput({ addImage }) {
         if (!video) return;
 
         const canvas = document.createElement('canvas');
-        canvas.width = desiredWidth;
-        canvas.height = desiredHeight;
+        canvas.width = VIDEO_WIDTH;
+        canvas.height = VIDEO_HEIGHT;
         const ctx = canvas.getContext('2d');
 
         const videoWidth = video.videoWidth;
         const videoHeight = video.videoHeight;
         if (!videoWidth || !videoHeight) return;
 
-        const desiredRatio = desiredWidth / desiredHeight;
+        const desiredRatio = VIDEO_WIDTH / VIDEO_HEIGHT;
         const videoRatio = videoWidth / videoHeight;
         let sx, sy, sWidth, sHeight;
 
@@ -74,9 +73,9 @@ function ImageInput({ addImage }) {
         }
 
         // Draw the cropped video frame to our offscreen canvas.
-        ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, desiredWidth, desiredHeight);
+        ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
         // Get the raw pixel data from the canvas.
-        const imageData = ctx.getImageData(0, 0, desiredWidth, desiredHeight);
+        const imageData = ctx.getImageData(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
         addImage(imageData);
     };
 
@@ -92,20 +91,19 @@ function ImageInput({ addImage }) {
     };
 
     return (
-        <div>
-            <div>
+    <Box>
                 {/* The video feed is styled to "cover" its container so that it is cropped (not squished) */}
                 <video
                     ref={videoRef}
                     autoPlay
                     muted
-                    style={{ objectFit: 'cover', width: desiredWidth, height: desiredHeight }}
+                    style={{ objectFit: 'cover', width: VIDEO_WIDTH / 4, height: VIDEO_HEIGHT / 4 }}
                 />
-            </div>
+
             <button onClick={() => (capturing ? stopCapture() : startCapture())}>
                 {capturing ? "Stop" : "Capture"}
             </button>
-        </div>
+    </Box>
     );
 }
 

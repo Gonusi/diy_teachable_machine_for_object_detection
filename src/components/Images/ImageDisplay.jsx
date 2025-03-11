@@ -1,18 +1,17 @@
 import React, {useEffect, useRef} from "react";
+import {VIDEO_HEIGHT, VIDEO_WIDTH, THUMB_WIDTH, THUMB_HEIGHT} from "./constants";
 
 function ImageDisplay({ images }) {
     const canvasRef = useRef(null);
 
     useEffect(() => {
-        const thumbWidth = 28;
         // Calculate the thumbnail height proportionally (28 * 800/1280 ≈ 18)
-        const thumbHeight = Math.round(thumbWidth * (800 / 1280));
         const cols = 5;
         const rows = Math.ceil(images.length / cols);
         const canvas = canvasRef.current;
         if (!canvas) return;
-        canvas.width = thumbWidth * cols;
-        canvas.height = thumbHeight * rows;
+        canvas.width = THUMB_WIDTH * cols;
+        canvas.height = THUMB_HEIGHT * rows;
         const ctx = canvas.getContext('2d');
 
         // Clear the canvas before redrawing
@@ -35,17 +34,17 @@ function ImageDisplay({ images }) {
                 0,
                 imageData.width,
                 imageData.height,
-                col * thumbWidth,
-                row * thumbHeight,
-                thumbWidth,
-                thumbHeight
+                col * THUMB_WIDTH,
+                row * THUMB_HEIGHT,
+                THUMB_WIDTH,
+                THUMB_HEIGHT
             );
         });
     }, [images]);
 
     // The container is fixed-size so that 5 thumbnails are shown vertically.
     return (
-        <div style={{ width: 28 * 5, height: Math.round((28 * (800 / 1280)) * 5), overflowY: 'auto', border: '1px solid black' }}>
+        <div style={{ width: THUMB_WIDTH * 5, height: THUMB_HEIGHT * 5, overflowY: 'auto', border: '1px solid black' }}>
             <canvas ref={canvasRef} />
         </div>
     );
