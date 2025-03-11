@@ -3,6 +3,7 @@ import ImageInput from "./ImageInput.jsx";
 import ImageDisplay from "./ImageDisplay.jsx";
 import {Box, Button} from "@mui/material";
 import {downloadZippedImages} from "./downloadZippedImages.js";
+import ImageAnnotationTool from "./ImageAnnotationTool.jsx";
 
 function Images() {
     const [images, setImages] = useState([]);
@@ -21,6 +22,11 @@ function Images() {
             <Button sx={{mr:2}} variant="outlined" onClick={() => setImages([])}>Clear Images</Button>
             <Button variant="contained" onClick={() => downloadZippedImages(images)}>Download images</Button>
             </Box>
+
+            <br/>
+            <br/>
+
+            <ImageAnnotationTool images={images} category="dog" />
         </Box>
     );
 }
