@@ -3,7 +3,7 @@ import ImageInput from "./ImageInput.jsx";
 import ImageDisplay from "./ImageDisplay.jsx";
 import {Box, Button} from "@mui/material";
 import {downloadZippedImages} from "./downloadZippedImages.js";
-import ImageAnnotationTool from "./ImageAnnotationTool.jsx";
+import ImageAnnotationTool from "../annotation/ImageAnnotationTool.jsx";
 
 function Images() {
     const [images, setImages] = useState([]);
