@@ -7,6 +7,15 @@ import ImageAnnotationTool from "../annotation/ImageAnnotationTool.jsx";
 
 function Images() {
     const [images, setImages] = useState([]);
+    const [annotations, setAnnotations] = useState([])
+
+    const handleAddAnnotation = (annotation) => {
+        setAnnotations(prevAnnotations => [...prevAnnotations, annotation])
+    }
+
+    const handleClearAnnotations = (imageId) => {
+        setAnnotations(prevAnnotations => prevAnnotations.filter(annotation => annotation.imageId !== imageId))
+    }
 
     // Append a new ImageData object to the images state
     const addImage = (newImageData) => {
@@ -26,7 +35,7 @@ function Images() {
             <br/>
             <br/>
 
-            <ImageAnnotationTool images={images} category="dog" />
+            <ImageAnnotationTool onDeleteAnnotation={handleClearAnnotations} onAddAnnotation={handleAddAnnotation()} images={images} category="dog" />
         </Box>
     );
 }

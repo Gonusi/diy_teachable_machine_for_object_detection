@@ -1,88 +1,79 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { VIDEO_WIDTH, VIDEO_HEIGHT } from './constants';
-import { saveAs } from 'file-saver';
 
 const CONTROL_RADIUS = 10; // Radius for control point circles
 
-const ImageAnnotationTool = ({ images, category }) => {
+/**
+ * AnnotationTool
+ * Props:
+ * - images: Array of image objects (assumed to be ImageData)
+ * - annotations: Object mapping image indices to an array of bounding boxes
+ * - onAddAnnotation: function(imageIndex, box) => void
+ * - onDeleteAnnotation: function(imageIndex) => void (e.g. to clear annotations for an image)
+ */
+const AnnotationTool = ({ images, annotations, onAddAnnotation, onDeleteAnnotation }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
-    // annotations: { [imageIndex]: [ { x, y, width, height }, ... ] }
-    const [annotations, setAnnotations] = useState({});
-    // For drawing a new bounding box
+    // Local state for drawing (and editing) new boxes.
     const [drawing, setDrawing] = useState(false);
     const [startPoint, setStartPoint] = useState(null);
     const [currentBox, setCurrentBox] = useState(null);
-    // For editing an existing box
-    // editing: { boxIndex, corner } where corner is 'topLeft' or 'bottomRight'
     const [editing, setEditing] = useState(null);
-
     const canvasRef = useRef(null);
     const currentImage = images[currentIndex];
 
-    // Helper: get mouse position relative to the canvas
+    // Helper: Get mouse position relative to the canvas.
     const getMousePos = (e) => {
         const rect = canvasRef.current.getBoundingClientRect();
-        return {
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top,
-        };
+        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     };
 
-    // Helper: check if mouse is within a circle of given center and radius
+    // Helper: Check if the mouse is near a control point.
     const isNearControlPoint = (mouseX, mouseY, pointX, pointY, radius) => {
         const dx = mouseX - pointX;
         const dy = mouseY - pointY;
         return dx * dx + dy * dy <= radius * radius;
     };
 
+    // Keyboard navigation (n for next, p for previous)
     useEffect(() => {
         const handleKeyDown = (e) => {
-            if (e.key === 'n' || e.key === 'N') {
+            if (e.key.toLowerCase() === 'n') {
                 handleNext();
-            } else if (e.key === 'p' || e.key === 'P') {
+            } else if (e.key.toLowerCase() === 'p') {
                 handlePrevious();
             }
         };
-
         window.addEventListener('keydown', handleKeyDown);
-
-        // Cleanup event listener on component unmount
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-        };
+        return () => window.removeEventListener('keydown', handleKeyDown);
     }, [currentIndex, images.length]);
 
-    // Redraw canvas when image, annotations, or current drawing box changes
+    // Redraw canvas whenever the image, annotations, or drawing state changes.
     useEffect(() => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
 
-        // Draw the current image (assuming it's an ImageData object)
         if (currentImage) {
             ctx.putImageData(currentImage, 0, 0);
         }
 
-        // Draw existing bounding boxes with control points
+        // Draw existing bounding boxes from parent's annotations.
         (annotations[currentIndex] || []).forEach((box) => {
-            // Draw the bounding box
             ctx.strokeStyle = 'red';
             ctx.lineWidth = 2;
             ctx.strokeRect(box.x, box.y, box.width, box.height);
 
-            // Draw top-left control point
+            // Draw control points
             ctx.fillStyle = 'blue';
             ctx.beginPath();
             ctx.arc(box.x, box.y, CONTROL_RADIUS, 0, 2 * Math.PI);
             ctx.fill();
-
-            // Draw bottom-right control point
             ctx.beginPath();
             ctx.arc(box.x + box.width, box.y + box.height, CONTROL_RADIUS, 0, 2 * Math.PI);
             ctx.fill();
         });
 
-        // If drawing a new bounding box, show it in a different color
+        // If a new box is being drawn, show it.
         if (currentBox) {
             ctx.strokeStyle = 'blue';
             ctx.lineWidth = 2;
@@ -90,12 +81,12 @@ const ImageAnnotationTool = ({ images, category }) => {
         }
     }, [currentImage, annotations, currentBox, currentIndex]);
 
-    // Mouse down: check if we're starting to edit an existing box or drawing a new one
+    // Start drawing or editing when the mouse goes down.
     const handleMouseDown = (e) => {
         const pos = getMousePos(e);
         const boxes = annotations[currentIndex] || [];
 
-        // Check if the click is on a control point for any box
+        // Check if the click is near a control point (for editing)
         for (let i = 0; i < boxes.length; i++) {
             const box = boxes[i];
             const topLeft = { x: box.x, y: box.y };
@@ -109,43 +100,17 @@ const ImageAnnotationTool = ({ images, category }) => {
                 return;
             }
         }
-        // Otherwise, start drawing a new box
+        // Otherwise, start drawing a new bounding box.
         setStartPoint(pos);
         setDrawing(true);
     };
 
     const handleMouseMove = (e) => {
         const pos = getMousePos(e);
-
-        // If editing an existing box
         if (editing !== null) {
-            setAnnotations((prev) => {
-                const boxes = prev[currentIndex] ? [...prev[currentIndex]] : [];
-                const box = { ...boxes[editing.boxIndex] };
-                // Compute the fixed corner of the box
-                const fixedPoint =
-                    editing.corner === 'topLeft'
-                        ? { x: box.x + box.width, y: box.y + box.height }
-                        : { x: box.x, y: box.y };
-
-                if (editing.corner === 'topLeft') {
-                    // Update top-left point and adjust width/height accordingly
-                    box.x = pos.x;
-                    box.y = pos.y;
-                    box.width = fixedPoint.x - pos.x;
-                    box.height = fixedPoint.y - pos.y;
-                } else if (editing.corner === 'bottomRight') {
-                    // Update bottom-right point; top-left stays fixed
-                    box.width = pos.x - fixedPoint.x;
-                    box.height = pos.y - fixedPoint.y;
-                }
-                boxes[editing.boxIndex] = box;
-                return { ...prev, [currentIndex]: boxes };
-            });
+            // Optionally implement editing updates here (e.g. call an onUpdateAnnotation callback)
             return;
         }
-
-        // If drawing a new bounding box
         if (drawing && startPoint) {
             const width = pos.x - startPoint.x;
             const height = pos.y - startPoint.y;
@@ -158,111 +123,30 @@ const ImageAnnotationTool = ({ images, category }) => {
             setEditing(null);
             return;
         }
-        if (drawing) {
-            if (currentBox) {
-                setAnnotations((prev) => {
-                    const newBoxes = prev[currentIndex] ? [...prev[currentIndex], currentBox] : [currentBox];
-                    return { ...prev, [currentIndex]: newBoxes };
-                });
-            }
-            setDrawing(false);
-            setCurrentBox(null);
-            setStartPoint(null);
+        if (drawing && currentBox) {
+            // Call the parent's callback to add a new annotation.
+            onAddAnnotation(currentIndex, currentBox);
         }
+        setDrawing(false);
+        setCurrentBox(null);
+        setStartPoint(null);
     };
 
-    // Navigation: go to previous image
     const handlePrevious = () => {
         if (currentIndex > 0) {
             setCurrentIndex(currentIndex - 1);
         }
     };
 
-    // Navigation: go to next image
     const handleNext = () => {
         if (currentIndex < images.length - 1) {
             setCurrentIndex(currentIndex + 1);
         }
     };
 
-    // Clear all annotations for the current image
+    // Clear all annotations for the current image by calling parent's callback.
     const handleClear = () => {
-        setAnnotations((prev) => ({ ...prev, [currentIndex]: [] }));
-    };
-
-    // Generate COCO JSON and download it using file-saver
-    const handleDownloadCOCO = () => {
-        const cocoImages = images.map((_, idx) => ({
-            id: idx,
-            file_name: `${idx}.png`,
-            width: VIDEO_WIDTH,
-            height: VIDEO_HEIGHT,
-            date_captured: new Date().toISOString(),
-            license: 1,
-            coco_url: "",
-            flickr_url: ""
-        }));
-
-        let annotationId = 1;
-        const cocoAnnotations = [];
-        Object.keys(annotations).forEach((imgIdx) => {
-            const boxes = annotations[imgIdx];
-            boxes.forEach((box) => {
-                // Ensure x and y represent the top-left corner
-                let x = box.x;
-                let y = box.y;
-                let width = box.width;
-                let height = box.height;
-                if (width < 0) {
-                    x = box.x + box.width;
-                    width = Math.abs(width);
-                }
-                if (height < 0) {
-                    y = box.y + box.height;
-                    height = Math.abs(height);
-                }
-                cocoAnnotations.push({
-                    id: annotationId++,
-                    image_id: parseInt(imgIdx, 10),
-                    category_id: 1, // single category
-                    bbox: [x, y, width, height],
-                    area: width * height,
-                    segmentation: [],
-                    iscrowd: 0
-                });
-            });
-        });
-
-        const cocoCategories = [
-            {
-                id: 1,
-                name: category,
-                supercategory: "none"
-            }
-        ];
-
-        const cocoJSON = {
-            info: {
-                description: "COCO Annotation Dataset",
-                version: "1.0",
-                year: new Date().getFullYear(),
-                contributor: "",
-                date_created: new Date().toISOString()
-            },
-            licenses: [
-                {
-                    id: 1,
-                    name: "Unknown",
-                    url: ""
-                }
-            ],
-            images: cocoImages,
-            annotations: cocoAnnotations,
-            categories: cocoCategories
-        };
-
-        const blob = new Blob([JSON.stringify(cocoJSON, null, 2)], { type: 'application/json;charset=utf-8' });
-        saveAs(blob, 'annotations.json');
+        onDeleteAnnotation(currentIndex);
     };
 
     return (
@@ -285,11 +169,8 @@ const ImageAnnotationTool = ({ images, category }) => {
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
             ></canvas>
-            <div style={{ marginTop: '10px' }}>
-                <button onClick={handleDownloadCOCO}>Download COCO</button>
-            </div>
         </div>
     );
 };
 
-export default ImageAnnotationTool;
+export default AnnotationTool;
