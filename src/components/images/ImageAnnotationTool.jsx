@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { VIDEO_WIDTH, VIDEO_HEIGHT } from '../images/constants.js' //
+import { VIDEO_WIDTH, VIDEO_HEIGHT } from '../images/constants.js'
+import {Button} from "@mui/material"; //
 
 const CONTROL_RADIUS = 10; // Radius for control point circles
 
@@ -37,9 +38,9 @@ const AnnotationTool = ({ images, annotations, onAddAnnotation, onDeleteAnnotati
     // Keyboard navigation (n for next, p for previous)
     useEffect(() => {
         const handleKeyDown = (e) => {
-            if (e.key.toLowerCase() === 'n') {
+            if (e.key.toLowerCase() === 'x') {
                 handleNext();
-            } else if (e.key.toLowerCase() === 'p') {
+            } else if (e.key.toLowerCase() === 'z') {
                 handlePrevious();
             }
         };
@@ -152,13 +153,13 @@ const AnnotationTool = ({ images, annotations, onAddAnnotation, onDeleteAnnotati
     return (
         <div>
             <div style={{ marginBottom: '10px' }}>
-                <button onClick={handlePrevious} disabled={currentIndex === 0}>
+                <Button variant="contained" onClick={handlePrevious} disabled={currentIndex === 0}>
                     Previous
-                </button>
-                <button onClick={handleNext} disabled={currentIndex === images.length - 1}>
+                </Button>
+                <Button variant="contained" onClick={handleNext} disabled={currentIndex === images.length - 1}>
                     Next
-                </button>
-                <button onClick={handleClear}>Clear bounding box</button>
+                </Button>
+                <Button variant="outlined" onClick={handleClear}>Clear bounding box</Button>
             </div>
             <canvas
                 ref={canvasRef}
